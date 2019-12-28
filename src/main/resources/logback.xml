@@ -1,0 +1,34 @@
+<!-- Using the logback-prd.xml instead of logback.xml for supporting the Spring logback extensions like "springProfile".
+There impossible to use the propertySource to set the Logback's configuration since the logback.xml is loaded before the Spring's ApplicationContext.
+references https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-logging for details
+-->
+
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+         <target>System.err</target>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- root logger -->
+    <root level="OFF" >
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <!-- shutdown the debug information of all class that the package name starts with "org" -->
+    <logger name="org" level="info" />
+    <logger name="org.project.ecco" level="all" />
+
+</configuration>

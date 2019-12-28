@@ -55,8 +55,7 @@ Controller中：
 private MyService service;
 
 @GetMapping("/say-hello")
-public ResponseEntity<?> sayHello(Locale locale) {
-  log.debug("locale is: " + locale);
+public ResponseEntity<?> sayHello() {
   return new ResponseEntity(service.sayHello(), HttpStatus.OK);
 ```
 

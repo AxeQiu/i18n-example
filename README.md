@@ -121,7 +121,7 @@ public Object wrap(ProceedingJoinPoint pjp) throws Throwable {
   Locale locale = threadLocalLocale.get();
   Object obj = null;
   try {
-    ...
+    log.debug("in the service aspect, locale is: " + locale);
   } catch (Throwable t) {
     throw new MyServiceException(i18n.getMessage(messageKey, null, locale));
   }

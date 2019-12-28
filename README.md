@@ -14,6 +14,7 @@ curl -H "Accept-Language: zh" http://<domain>/say-hello
 ##### 对业务层有侵入的国际化实现：
 Controller中：
 ```java
+//对业务有侵入的国际化实现
 @Autowired
 private MyService service;
 
@@ -33,6 +34,7 @@ public ResponseEntity<?> sayHello(Locale locale) {
 
 Service中：
 ```java
+//对业务有侵入的国际化实现
 @Autowired
 private MessageSource i18n;
 
@@ -48,6 +50,7 @@ public String sayHello(Locale locale) {
 ##### 对业务层无侵入的国际化实现：
 Controller中：
 ```java
+//对业务无侵入的国际化实现
 @Autowired
 private MyService service;
 
@@ -59,6 +62,7 @@ public ResponseEntity<?> sayHello(Locale locale) {
 
 Service中：
 ```java
+//对业务无侵入的国际化实现
 @Service
 public String sayHello() {
   try {
@@ -68,3 +72,59 @@ public String sayHello() {
   }
 }
 ```
+
+对比两种实现，对业务层无侵入更能体现**单一职责原则**
+
+使用aop，在切面中处理国际化逻辑，从而将其与业务层分开；同时需要使用 scope=request 的ThreadLocal<Locale>来实现切面间的Locale类传递.
+
+Configuration中：
+```java
+@Bean
+@RequestScope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+public ThreadLocal<Locale> threadLocalLocale() {
+  return new ThreadLocale<Locale>();
+}
+```
+
+Controller Aspect中：
+```java
+@Autowired
+private HttpServletRequest httpServletRequest;
+
+@Autowired
+private ThreadLocal<Locale> threadLocalLocale;
+
+@Around(...)
+public Object wrap(ProceedingJoinPoint pjp) throws Throwable {
+  Locale locale = httpServletRequest.getLocale();
+  threadLocalLocale.set(locale);
+  Object obj = null;
+  try {
+    log.debug("in the controller aspect, locale is: " + locale);
+    obj = pjp.proceed();
+    ...
+  } catch (Throwable t) {
+    ...
+  } finally {
+    threadLocalLocale.remove(); // prevent from rehash/resize of ThreadLocalMap
+  }
+}
+```
+
+Service Aspect中：
+```java
+@Autowired
+ThreadLocal<Locale> threadLocalLocale;
+
+@Around(...)
+public Object wrap(ProceedingJoinPoint pjp) throws Throwable {
+  Locale locale = threadLocalLocale.get();
+  Object obj = null;
+  try {
+    ...
+  } catch (Throwable t) {
+    throw new MyServiceException(i18n.getMessage(messageKey, null, locale));
+  }
+}
+```
+  
